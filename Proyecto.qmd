@@ -1,0 +1,892 @@
+---
+title: "Proyecto DATA MINING AND BIG DATA -Universidad Galileo"
+author: "Francisco Gonzalez"
+format: html
+editor: visual
+---
+
+## Descripción del Dataset
+
+El dataset contiene variables relacionadas con las características morfológicas de células tumorales y su diagnóstico asociado. Las variables son utilizadas para diferenciar entre dos tipos de diagnósticos: **B** (Benigno) y **M** (Maligno). Aquí está la descripción de cada variable:
+
+#### **1. Variables Básicas**
+
+-   **`id`**:
+
+    -   Identificador único para cada observación (paciente).
+
+    -   No tiene un papel directo en el análisis y puede ser excluido.
+
+-   **`diagnosis`**:
+
+    -   **Variable objetivo** (target) que clasifica las muestras como:
+
+        -   **B**: Benigno.
+
+        -   **M**: Maligno.
+
+    -   El objetivo del análisis es predecir esta variable a partir de las características proporcionadas.
+
+#### **2. Características Derivadas**
+
+Las características se calculan a partir de imágenes digitalizadas de masas mamarias. Para cada una, se generan tres tipos de mediciones:
+
+-   **Mean**: Promedio del atributo.
+
+-   **SE**: Error estándar.
+
+-   **Worst**: Valor más extremo (peor) medido.
+
+##### **Principales Variables**
+
+1.  **`radius_*`**:
+
+    -   Radio medio, error estándar y peor radio de las células.
+
+    -   Representa el tamaño del tumor.
+
+2.  **`texture_*`**:
+
+    -   Variación en la intensidad de la textura en la imagen.
+
+    -   Indica irregularidades en la superficie celular.
+
+3.  **`perimeter_*`**:
+
+    -   Perímetro medio, error estándar y peor perímetro de las células.
+
+    -   Relacionado con la forma del tumor.
+
+4.  **`area_*`**:
+
+    -   Área media, error estándar y peor área de las células.
+
+    -   Refleja el tamaño del tumor.
+
+5.  **`smoothness_*`**:
+
+    -   Uniformidad del contorno celular.
+
+    -   Representa qué tan suaves son las bordes de las células.
+
+6.  **`compactness_*`**:
+
+    -   Grado de compacidad celular.
+
+    -   Relacionado con la densidad celular.
+
+7.  **`concavity_*`**:
+
+    -   Grado de concavidad en el contorno celular.
+
+    -   Se refiere a depresiones en los bordes de las células.
+
+8.  **`concave.points_*`**:
+
+    -   Número de puntos cóncavos en el contorno celular.
+
+    -   Relacionado con la forma de las células.
+
+9.  **`symmetry_*`**:
+
+    -   Simetría de las células.
+
+    -   Representa cuán equilibradas son las formas celulares.
+
+10. **`fractal_dimension_*`**:
+
+    -   Dimensión fractal del contorno celular.
+
+    -   Describe la complejidad del contorno.
+
+## Objetivo del Análisis
+
+El objetivo principal es desarrollar y evaluar modelos de clasificación para predecir si un tumor es **Benigno (B)** o **Maligno (M)** basándose en las características proporcionadas.
+
+#### Metas específicas:
+
+1.  **Identificación de Características Relevantes**:
+
+    -   Determinar qué variables tienen mayor impacto en el diagnóstico.
+
+2.  **Construcción de Modelos Predictivos**:
+
+    -   Entrenar modelos como Logistic Regression, SVM, Random Forest y KNN para predecir el diagnóstico.
+
+3.  **Evaluación del Rendimiento**:
+
+    -   Comparar los modelos en métricas como exactitud, sensibilidad, especificidad y precisión.
+
+4.  **Optimización de la Clasificación**:
+
+    -   Seleccionar el modelo más confiable para ayudar en el diagnóstico clínico de tumores.
+
+### Contexto y Aplicación
+
+Este análisis es útil en aplicaciones clínicas, específicamente en el diagnóstico temprano del cáncer de mama. Un modelo predictivo preciso puede:
+
+-   Ayudar a médicos a clasificar tumores con mayor confianza.
+
+-   Reducir la necesidad de pruebas invasivas adicionales.
+
+-   Mejorar la atención y los resultados para los pacientes.
+
+## Análisis Exploratorio de Datos
+
+El análisis exploratorio de datos (EDA, por sus siglas en inglés) es una etapa fundamental en cualquier proyecto de ciencia de datos, ya que permite comprender la estructura, características y relaciones de las variables dentro del dataset. En este caso, se analizan las características morfológicas de células tumorales para determinar patrones que permitan diferenciar entre tumores **benignos** (B) y **malignos** (M). Este proceso no solo ayuda a validar la calidad de los datos, sino también a identificar las variables más relevantes para el diagnóstico.
+
+### Objetivo del EDA
+
+El objetivo del análisis exploratorio es obtener una visión general de los datos mediante:
+
+1.  **Describir las Variables**:
+
+    -   Analizar las estadísticas descriptivas de las variables numéricas (media, mediana, desviación estándar, etc.) y su distribución.
+
+    -   Evaluar las frecuencias de las variables categóricas, como la variable objetivo `diagnosis`.
+
+2.  **Identificar Patrones y Relación entre Variables**:
+
+    -   Investigar posibles correlaciones entre las variables independientes y la variable objetivo.
+
+    -   Detectar grupos o distribuciones que diferencien claramente los tumores malignos de los benignos.
+
+3.  **Visualización de Datos**:
+
+    -   Usar gráficos como histogramas, gráficos de dispersión, boxplots y mapas de calor para representar visualmente la distribución y relaciones de las variables.
+
+    -   Examinar cómo las características como el tamaño del tumor (`radius_mean`) o la textura (`texture_mean`) varían entre los dos tipos de diagnóstico.
+
+4.  **Detección de Problemas en los Datos**:
+
+    -   Identificar valores atípicos, datos faltantes o inconsistencias que puedan afectar los resultados de los modelos predictivos.
+
+```{r setup }
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+
+# Cargar librerías necesarias
+library(tidyverse)
+library(summarytools)
+library(kableExtra) # Para tablas bonitas
+library(gt) # Otra alternativa para tablas
+```
+
+### Primeras filas del Dataset
+
+```{r carga_archivo}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+
+#leer archivo de datos data.csv
+data <- read.csv("data.csv")
+# Visualizar las primeras filas para referencia
+head(data) %>%
+  kbl(caption = "Primeras filas del dataset") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+### Resumen General
+
+```{r resumen_general} }
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+# Filtrar variables numéricas
+numerical_vars <- data %>% select(where(is.numeric))
+
+# Crear un data frame vacío para almacenar resultados
+summary_table <- data.frame(
+  Variable = character(),
+  Min = numeric(),
+  Max = numeric(),
+  Mean = numeric(),
+  Median = numeric(),
+  SD = numeric(),
+  stringsAsFactors = FALSE
+)
+
+# Calcular estadísticas descriptivas por cada variable
+for (var in colnames(numerical_vars)) {
+  stats <- data.frame(
+    Variable = var,
+    Min = min(numerical_vars[[var]], na.rm = TRUE),
+    Max = max(numerical_vars[[var]], na.rm = TRUE),
+    Mean = mean(numerical_vars[[var]], na.rm = TRUE),
+    Median = median(numerical_vars[[var]], na.rm = TRUE),
+    SD = sd(numerical_vars[[var]], na.rm = TRUE)
+  )
+  
+  # Añadir los resultados a la tabla
+  summary_table <- rbind(summary_table, stats)
+}
+
+# Redondear las estadísticas descriptivas
+summary_table <- summary_table %>%
+  mutate(across(where(is.numeric), round, 2))
+
+# Mostrar la tabla estilizada
+summary_table %>%
+  kbl(caption = "Estadísticas descriptivas de variables numéricas") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE, color = "white", background = "steelblue")
+```
+
+### Histogramas
+
+```{r histogramas }
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+#| fig.width: 10
+#| fig.height: 25
+#| fig.align: center
+
+# Cargar librerías necesarias
+library(tidyverse)
+
+# Seleccionar variables numéricas
+numerical_vars <- data %>% select(where(is.numeric))
+
+# Crear el gráfico
+histogram_plot <- numerical_vars %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
+  ggplot(aes(x = Valor)) +
+  geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
+  facet_wrap(~ Variable, scales = "free", ncol = 3) + # Mantener 3 columnas
+  theme_minimal(base_size = 12) +
+  theme(
+    strip.text = element_text(size = 10, face = "bold"),
+    axis.text.x = element_text(size = 8, angle = 45, hjust = 1), # Etiquetas X rotadas si es necesario
+    axis.text.y = element_text(size = 8),
+    plot.title = element_text(size = 14, face = "bold"),
+    panel.spacing = unit(1, "lines") # Espacio entre facetas
+  ) +
+  labs(
+    title = "Distribución de Variables Numéricas",
+    x = "Valores",
+    y = "Frecuencia"
+  )
+
+# Mostrar el gráfico en el entorno
+print(histogram_plot)
+
+```
+
+### Variables Categoricas
+
+```{r variables_categoricas}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+
+# Seleccionar variables categóricas
+categorical_vars <- data %>% select(where(is.factor), diagnosis)
+
+# Crear tabla de frecuencias consolidada
+categorical_summary <- categorical_vars %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Valor") %>%
+  group_by(Variable, Valor) %>%
+  summarise(Frecuencia = n(), .groups = "drop")
+
+# Mostrar tabla bonita
+categorical_summary %>%
+  kbl(caption = "Resumen de Frecuencias para Variables Categóricas") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+
+```
+
+### Correlaciones
+
+```{r correlaciones}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+#| fig.width: 15
+#| fig.height: 15
+#| fig.align: center
+
+# Cargar librerías necesarias
+library(tidyverse)
+library(corrplot) # Para una matriz de correlación más clara
+library(ggcorrplot) # Alternativa para correlación
+
+
+# Convertir diagnosis a un formato numérico
+data_cor <- data %>%
+  mutate(diagnosis_numeric = ifelse(diagnosis == "M", 1, 0)) %>%
+  select(where(is.numeric))
+
+# Calcular la matriz de correlación
+cor_matrix <- cor(data_cor, use = "complete.obs")
+
+# Extraer la correlación con la variable diagnosis_numeric
+cor_target <- data.frame(
+  Variable = rownames(cor_matrix),
+  Correlación = cor_matrix[, "diagnosis_numeric"]
+) %>%
+  arrange(desc(abs(Correlación)))
+
+# Filtrar las 10 variables con mayor correlación con diagnosis_numeric
+top_cor <- cor_target %>%
+  filter(Variable != "diagnosis_numeric") %>%
+  slice_max(order_by = abs(Correlación), n = 15)
+
+# Mostrar tabla bonita sin índice
+top_cor %>%
+  mutate(Correlación = round(Correlación, 2)) %>% # Redondear las correlaciones
+  kbl(caption = "Top 15 Variables más Correlacionadas con Diagnosis", row.names = FALSE) %>% # row.names = FALSE elimina el índice
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE, background = "steelblue", color = "white") # Resaltar nombres de las variables
+
+# Visualizar las correlaciones de las variables relevantes
+ggcorrplot(cor_matrix[rownames(cor_matrix) %in% top_cor$Variable,
+                      colnames(cor_matrix) %in% top_cor$Variable],
+           lab = TRUE, hc.order = TRUE, type = "lower",
+           title = "Correlación de Variables más Relevantes")
+
+```
+
+### Conclusiones del Análisis Exploratorio de Datos (EDA)
+
+A partir de las tablas y gráficos presentados, se pueden extraer las siguientes conclusiones sobre los datos y las relaciones entre las variables:
+
+------------------------------------------------------------------------
+
+#### **1. Distribución de la Variable Objetivo (`diagnosis`)**
+
+-   La variable `diagnosis` (clase objetivo) tiene dos posibles valores:
+
+    -   **B (Benigno):** 357 muestras (mayoría).
+
+    -   **M (Maligno):** 212 muestras.
+
+-   Existe un desbalance en la proporción de clases, con más casos benignos que malignos. Este desbalance podría impactar en los modelos predictivos, favoreciendo la clase mayoritaria.
+
+------------------------------------------------------------------------
+
+#### **2. Estadísticas Descriptivas de Variables Numéricas**
+
+-   Las variables tienen diferentes escalas y rangos, lo que hace necesario normalizar o estandarizar los datos antes de construir los modelos.
+
+-   Algunas variables como `radius_mean`, `perimeter_mean`, y `area_mean` tienen rangos amplios, mientras que otras como `smoothness_mean` y `fractal_dimension_mean` están restringidas a valores pequeños.
+
+-   La desviación estándar (SD) indica que variables como `area_mean` (SD = 351.91) y `perimeter_mean` (SD = 24.30) tienen una mayor dispersión, lo que podría ser relevante en la clasificación.
+
+------------------------------------------------------------------------
+
+#### **3. Correlación de Variables con la Clase Objetivo**
+
+-   El análisis de correlaciones identifica las variables más relacionadas con `diagnosis`:
+
+    -   Las variables **más correlacionadas** son:
+
+        -   `concave.points_worst` (0.79).
+
+        -   `perimeter_worst` (0.78).
+
+        -   `concave.points_mean` (0.78).
+
+        -   `radius_worst` (0.78).
+
+    -   Estas variables describen aspectos del tamaño y la concavidad del tumor, lo que sugiere que tumores más grandes y menos uniformes tienen más probabilidad de ser malignos.
+
+-   Las variables menos correlacionadas podrían no ser tan relevantes para los modelos, y podrían considerarse para eliminación en etapas de selección de características.
+
+------------------------------------------------------------------------
+
+#### **4. Relación Entre Variables**
+
+-   La matriz de correlación muestra que muchas variables están altamente correlacionadas entre sí, especialmente las relacionadas con el tamaño:
+
+    -   Ejemplo: `radius_mean`, `area_mean`, y `perimeter_mean` tienen correlaciones superiores a 0.9.
+
+    -   Esto sugiere **multicolinealidad**, que podría ser problemático para ciertos modelos como la regresión logística. En tales casos, sería necesario aplicar técnicas de reducción de dimensionalidad (por ejemplo, PCA) o eliminar variables redundantes.
+
+-   Las variables relacionadas con la "peor" medición (`_worst`) también están fuertemente correlacionadas entre sí.
+
+------------------------------------------------------------------------
+
+#### **5. Diferencias Notables Entre Tumores Benignos y Malignos**
+
+-   Tumores malignos tienden a tener valores más altos en:
+
+    -   **Tamaño:** Variables como `radius_mean`, `area_mean` y `perimeter_mean`.
+
+    -   **Concavidad:** Variables como `concave.points_worst` y `concavity_mean`.
+
+-   Tumores benignos tienen valores más bajos en estas mismas características, lo que indica que estas variables serán cruciales para distinguir entre ambas clases.
+
+------------------------------------------------------------------------
+
+#### **Recomendaciones para el Modelado**
+
+1.  **Estandarización de Datos**:
+
+    -   Dado que las variables tienen rangos muy diferentes, es necesario escalarlas antes de entrenar los modelos.
+
+2.  **Manejo de Multicolinealidad**:
+
+    -   Algunas variables tienen correlaciones extremadamente altas. Se podría reducir el número de variables usando técnicas como PCA o seleccionando solo las más relevantes.
+
+3.  **Consideración del Desbalance de Clases**:
+
+    -   Implementar estrategias para manejar el desbalance de clases, como oversampling (SMOTE) o ajuste de pesos en los modelos.
+
+4.  **Uso de Variables Clave**:
+
+    -   Variables como `concave.points_worst`, `perimeter_worst`, y `radius_worst` deben tener prioridad en los modelos debido a su alta correlación con la clase objetivo.
+
+## Uso de Modelos Predictivos para el Diagnóstico de Tumores
+
+El objetivo principal de este análisis es desarrollar y evaluar modelos predictivos que permitan clasificar tumores mamarios como **benignos (B)** o **malignos (M)** basándose en las características morfológicas de las células tumorales. Estas características, derivadas de imágenes digitalizadas, incluyen mediciones como el radio, la textura, la concavidad, la simetría y el área de las células, entre otras.
+
+Dado que el diagnóstico temprano y preciso del cáncer de mama es crucial para mejorar las tasas de supervivencia y optimizar el tratamiento, se utilizan diferentes enfoques de machine learning que ofrecen ventajas específicas según el problema.
+
+En este análisis, se han seleccionado cuatro modelos representativos con diferentes enfoques para la clasificación:
+
+```{r model_training}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+
+# Cargar librerías necesarias
+library(caret)
+library(e1071)
+library(randomForest)
+library(class)
+
+
+# Preparar los datos
+data$diagnosis <- as.factor(data$diagnosis) # Convertir diagnosis a factor
+data <- data[ , !names(data) %in% c("id", "Unnamed: 0","X")] # Eliminar columnas irrelevantes
+
+# Verificar valores faltantes y manejar imputación
+if (any(is.na(data))) {
+  preprocess <- preProcess(data, method = "medianImpute") # Imputar la mediana
+  data <- predict(preprocess, newdata = data)
+}
+
+# Dividir los datos en conjunto de entrenamiento y prueba
+set.seed(42)
+trainIndex <- createDataPartition(data$diagnosis, p = 0.8, list = FALSE)
+trainData <- data[trainIndex, ]
+testData <- data[-trainIndex, ]
+
+# Escalar características
+scale_columns <- colnames(trainData)[colnames(trainData) != "diagnosis"]
+trainData[scale_columns] <- scale(trainData[scale_columns])
+testData[scale_columns] <- scale(testData[scale_columns])
+
+# Definir modelos
+models <- list(
+  LogisticRegression = train(
+    diagnosis ~ ., data = trainData, method = "glm", family = "binomial", trControl = trainControl(method = "cv", number = 5)
+  ),
+  SVM = train(
+    diagnosis ~ ., data = trainData, method = "svmLinear", trControl = trainControl(method = "cv", number = 5)
+  ),
+  RandomForest = train(
+    diagnosis ~ ., data = trainData, method = "rf", trControl = trainControl(method = "cv", number = 5)
+  ),
+  KNN = train(
+    diagnosis ~ ., data = trainData, method = "knn", trControl = trainControl(method = "cv", number = 5),
+    tuneGrid = expand.grid(k = c(3, 5, 7)) # Buscar el mejor valor de k
+  )
+)
+
+# Evaluar modelos en el conjunto de prueba
+results <- lapply(models, function(model) {
+  predictions <- predict(model, testData)
+  accuracy <- mean(predictions == testData$diagnosis)
+  list(
+    Accuracy = accuracy,
+    ConfusionMatrix = confusionMatrix(predictions, testData$diagnosis)
+  )
+})
+
+# Convertir resultados a un data frame para visualización
+results_df <- data.frame(
+  Model = names(results),
+  Accuracy = sapply(results, function(res) res$Accuracy)
+)
+
+# Mostrar resultados
+#print(results_df)
+```
+
+```{r model_summary}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+
+# Cargar librerías necesarias
+library(kableExtra)
+
+for (model_name in names(models)) {
+  #cat("\n### Modelo:", model_name, "\n\n")
+  
+  # Extraer modelo entrenado
+  model <- models[[model_name]]
+  
+  # Imprimir el summary del modelo
+  #print(summary(model))
+}
+
+```
+
+### **1. Regresión Logística**
+
+-   **Descripción**:
+
+    -   Es un modelo estadístico que se utiliza ampliamente para problemas de clasificación binaria.
+
+    -   Estima la probabilidad de que una observación pertenezca a una clase en función de las variables independientes.
+
+-   **Ventajas**:
+
+    -   Fácil de interpretar y explicar.
+
+    -   Eficaz en datasets con relaciones lineales entre las variables independientes y la clase objetivo.
+
+-   **Aplicación en este caso**:
+
+    -   Permite identificar qué características tienen un impacto significativo en la probabilidad de que un tumor sea maligno.
+
+#### **Resultados del Modelo: Logistic Regression**
+
+```{r confusion_matrix_logistic}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+#| fig.width: 6
+#| fig.height: 2.5
+#| fig.align: center
+
+library(caret)
+library(kableExtra)
+
+
+# Predecir en el conjunto de prueba para Logistic Regression
+predictions_logistic <- predict(models[["LogisticRegression"]], testData[ , colnames(testData) != "diagnosis"])
+
+# Generar la matriz de confusión para Logistic Regression
+confusion_logistic <- confusionMatrix(predictions_logistic, testData$diagnosis, positive = "M")
+
+# Visualizar la matriz de confusión con ggplot
+  conf_matrix_df <- as.data.frame(confusion_logistic$table)
+  colnames(conf_matrix_df) <- c("Reference", "Prediction", "Freq")
+  print(
+    ggplot(conf_matrix_df, aes(x = Reference, y = Prediction, fill = Freq)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = Freq), color = "black", size = 6) +
+      scale_fill_gradient(low = "lightblue", high = "steelblue") +
+      labs(title = paste("Matriz de Confusión para Regresión Logística"),
+           x = "Referencia (Clases Reales)",
+           y = "Predicción",
+           fill = "Frecuencia") +
+      theme_minimal(base_size = 14)
+  )
+
+# Calcular métricas clave
+metrics_logistic <- data.frame(
+  Métrica = c("Exactitud (Accuracy)", "Sensibilidad (Recall)", "Especificidad", "Precisión (Precision)"),
+  Valor = round(c(
+    confusion_logistic$overall["Accuracy"],
+    confusion_logistic$byClass["Sensitivity"],
+    confusion_logistic$byClass["Specificity"],
+    confusion_logistic$byClass["Precision"]
+  ), 3)
+)
+metrics_logistic %>%
+  kbl(caption = "Métricas del Modelo de Regresión Logística", row.names = FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE, background = "steelblue", color = "white") # Resaltar nombres de las variables
+
+```
+
+### **2. Support Vector Machine (SVM)**
+
+-   **Descripción**:
+
+    -   Es un modelo basado en encontrar un hiperplano óptimo que separe las clases (benigno y maligno) en un espacio multidimensional.
+
+    -   Funciona bien en problemas lineales y no lineales mediante el uso de kernels.
+
+-   **Ventajas**:
+
+    -   Robusto frente a datasets con alta dimensionalidad.
+
+    -   Eficaz en casos donde las clases no son fácilmente separables.
+
+-   **Aplicación en este caso**:
+
+    -   Ayuda a encontrar patrones complejos en los datos, especialmente en las características no lineales que diferencian a los tumores benignos de los malignos.
+
+#### **Resultados del Modelo: SVM**
+
+```{r confusion_matrix_svm}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+#| fig.width: 6
+#| fig.height: 2.5
+#| fig.align: center
+
+# Predecir en el conjunto de prueba para SVM
+predictions_svm <- predict(models[["SVM"]], testData[ , colnames(testData) != "diagnosis"])
+
+# Generar la matriz de confusión para SVM
+confusion_svm <- confusionMatrix(predictions_svm, testData$diagnosis, positive = "M")
+
+# Visualizar la matriz de confusión con ggplot
+conf_matrix_df <- as.data.frame(confusion_svm$table)
+colnames(conf_matrix_df) <- c("Reference", "Prediction", "Freq")
+print(
+  ggplot(conf_matrix_df, aes(x = Reference, y = Prediction, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), color = "black", size = 6) +
+    scale_fill_gradient(low = "lightblue", high = "steelblue") +
+    labs(title = "Matriz de Confusión para SVM",
+         x = "Referencia (Clases Reales)",
+         y = "Predicción",
+         fill = "Frecuencia") +
+    theme_minimal(base_size = 14)
+)
+
+# Calcular métricas clave
+metrics_svm <- data.frame(
+  Métrica = c("Exactitud (Accuracy)", "Sensibilidad (Recall)", "Especificidad", "Precisión (Precision)"),
+  Valor = round(c(
+    confusion_svm$overall["Accuracy"],
+    confusion_svm$byClass["Sensitivity"],
+    confusion_svm$byClass["Specificity"],
+    confusion_svm$byClass["Precision"]
+  ), 3)
+)
+metrics_svm %>%
+  kbl(caption = "Métricas del Modelo SVM", row.names = FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE, background = "steelblue", color = "white")
+```
+
+### **3. Random Forest**
+
+-   **Descripción**:
+
+    -   Es un modelo basado en árboles de decisión. Construye múltiples árboles de decisión y combina sus resultados para mejorar la precisión.
+
+    -   Utiliza técnicas de bagging para reducir el sobreajuste.
+
+-   **Ventajas**:
+
+    -   Robusto frente a datos ruidosos y variables irrelevantes.
+
+    -   No requiere mucho ajuste previo de los datos (normalización o escalado).
+
+-   **Aplicación en este caso**:
+
+    -   Identifica características importantes y captura interacciones complejas entre variables que pueden ser útiles para distinguir tumores benignos y malignos.
+
+#### **Resultados del Modelo: Random Forest**
+
+```{r confusion_matrix_rf}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+#| fig.width: 6
+#| fig.height: 2.5
+#| fig.align: center
+
+# Predecir en el conjunto de prueba para Random Forest
+predictions_rf <- predict(models[["RandomForest"]], testData)
+
+# Generar la matriz de confusión para Random Forest
+confusion_rf <- confusionMatrix(predictions_rf, testData$diagnosis, positive = "M")
+
+# Visualizar la matriz de confusión con ggplot
+conf_matrix_df <- as.data.frame(confusion_rf$table)
+colnames(conf_matrix_df) <- c("Reference", "Prediction", "Freq")
+print(
+  ggplot(conf_matrix_df, aes(x = Reference, y = Prediction, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), color = "black", size = 6) +
+    scale_fill_gradient(low = "lightblue", high = "steelblue") +
+    labs(title = "Matriz de Confusión para Random Forest",
+         x = "Referencia (Clases Reales)",
+         y = "Predicción",
+         fill = "Frecuencia") +
+    theme_minimal(base_size = 14)
+)
+
+# Calcular métricas clave
+metrics_rf <- data.frame(
+  Métrica = c("Exactitud (Accuracy)", "Sensibilidad (Recall)", "Especificidad", "Precisión (Precision)"),
+  Valor = round(c(
+    confusion_rf$overall["Accuracy"],
+    confusion_rf$byClass["Sensitivity"],
+    confusion_rf$byClass["Specificity"],
+    confusion_rf$byClass["Precision"]
+  ), 3)
+)
+metrics_rf %>%
+  kbl(caption = "Métricas del Modelo Random Forest", row.names = FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE, background = "steelblue", color = "white")
+```
+
+### **4. K-Nearest Neighbors (KNN)**
+
+-   **Descripción**:
+
+    -   Es un algoritmo basado en la proximidad, donde la clase de una observación se asigna según las clases de sus vecinos más cercanos.
+
+    -   La distancia entre puntos en el espacio de características es crucial para el desempeño del modelo.
+
+-   **Ventajas**:
+
+    -   Sencillo de implementar y entender.
+
+    -   Puede modelar relaciones no lineales sin requerir suposiciones sobre la distribución de los datos.
+
+-   **Aplicación en este caso**:
+
+    -   Detecta similitudes entre tumores y sus vecinos más cercanos para determinar su clasificación.
+
+#### **Resultados del Modelo: KNN**
+
+```{r confusion_matrix_knn}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+#| fig.width: 6
+#| fig.height: 2.5
+#| fig.align: center
+
+
+# Predecir en el conjunto de prueba para KNN
+predictions_knn <- predict(models[["KNN"]], testData)
+
+# Generar la matriz de confusión para KNN
+confusion_knn <- confusionMatrix(predictions_knn, testData$diagnosis, positive = "M")
+
+# Visualizar la matriz de confusión con ggplot
+conf_matrix_df <- as.data.frame(confusion_knn$table)
+colnames(conf_matrix_df) <- c("Reference", "Prediction", "Freq")
+print(
+  ggplot(conf_matrix_df, aes(x = Reference, y = Prediction, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), color = "black", size = 6) +
+    scale_fill_gradient(low = "lightblue", high = "steelblue") +
+    labs(title = "Matriz de Confusión para KNN",
+         x = "Referencia (Clases Reales)",
+         y = "Predicción",
+         fill = "Frecuencia") +
+    theme_minimal(base_size = 14)
+)
+
+# Calcular métricas clave
+metrics_knn <- data.frame(
+  Métrica = c("Exactitud (Accuracy)", "Sensibilidad (Recall)", "Especificidad", "Precisión (Precision)"),
+  Valor = round(c(
+    confusion_knn$overall["Accuracy"],
+    confusion_knn$byClass["Sensitivity"],
+    confusion_knn$byClass["Specificity"],
+    confusion_knn$byClass["Precision"]
+  ), 3)
+)
+metrics_knn %>%
+  kbl(caption = "Métricas del Modelo KNN", row.names = FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE, background = "steelblue", color = "white")
+```
+
+## Resumen de resultados de prediccion
+
+```{r resumen_modelos}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+
+# Crear una tabla con las métricas de todos los modelos
+models_metrics <- data.frame(
+  Modelo = c("Logistic Regression", "SVM", "Random Forest", "KNN"),
+  Accuracy = c(
+    confusion_logistic$overall["Accuracy"],
+    confusion_svm$overall["Accuracy"],
+    confusion_rf$overall["Accuracy"],
+    confusion_knn$overall["Accuracy"]
+  ),
+  Sensitivity = c(
+    confusion_logistic$byClass["Sensitivity"],
+    confusion_svm$byClass["Sensitivity"],
+    confusion_rf$byClass["Sensitivity"],
+    confusion_knn$byClass["Sensitivity"]
+  ),
+  Specificity = c(
+    confusion_logistic$byClass["Specificity"],
+    confusion_svm$byClass["Specificity"],
+    confusion_rf$byClass["Specificity"],
+    confusion_knn$byClass["Specificity"]
+  ),
+  Precision = c(
+    confusion_logistic$byClass["Precision"],
+    confusion_svm$byClass["Precision"],
+    confusion_rf$byClass["Precision"],
+    confusion_knn$byClass["Precision"]
+  )
+)
+
+# Redondear solo las columnas numéricas
+models_metrics[, 2:5] <- round(models_metrics[, 2:5], 3)
+
+# Mostrar la tabla en formato bonito
+models_metrics %>%
+  kbl(caption = "Resumen de Métricas Clave para Todos los Modelos", row.names = FALSE) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  column_spec(1, bold = TRUE, background = "steelblue", color = "white") %>%
+  column_spec(2:5, bold = FALSE, background = "lightgray") %>%
+  add_header_above(c(" " = 1, "Métricas Clave" = 4))
+```
+
+## Conclusiones
+
+Se pueden sacar las siguientes conclusiones:
+
+1.  **Modelo con Mejor Precisión General**: SVM tiene la mayor Accuracy (0.991), lo que indica que este modelo clasifica correctamente la mayor proporción de los casos (tanto positivos como negativos). Le sigue KNN con una Accuracy de 0.982.
+
+2.  **Sensibilidad (Recall):** Tanto SVM como Logistic Regression alcanzan un Recall perfecto (1.000), lo que significa que ambos detectan correctamente todos los casos positivos (M). Random Forest y KNN tienen una Sensibilidad ligeramente menor (0.976), pero aún así muy alta.
+
+3.  **Especificidad:** SVM y KNN tienen la mayor Especificidad (0.986), lo que indica que ambos son los más efectivos al identificar correctamente los casos negativos (B). Random Forest está ligeramente por detrás con 0.972, mientras que Logistic Regression tiene la menor especificidad (0.944).
+
+4.  **Precisión:** SVM tiene la mejor Precisión (0.977), lo que significa que la mayor proporción de sus predicciones positivas son correctas. KNN sigue de cerca con una Precisión de 0.976, mientras que Random Forest y Logistic Regression tienen valores menores (0.953 y 0.913, respectivamente).
+
+### Conclusiones Finales:
+
+**SVM es el modelo más robusto en general:**
+
+Tiene la mejor Accuracy y la mayor combinación de Sensibilidad, Especificidad y Precisión. Este modelo es ideal si el equilibrio entre detectar positivos y evitar falsos positivos es crítico.
+
+**KNN** es un competidor cercano:
+
+Aunque tiene una ligera desventaja en Sensibilidad (0.976 vs. 1.000 de SVM), sus métricas generales son consistentes, y su Especificidad iguala la de SVM. Logistic Regression y Random Forest tienen aplicaciones específicas:
+
+**Logistic Regression** sobresale en detectar todos los casos positivos (Recall perfecto), pero su capacidad de identificar casos negativos es menor (0.944).
+
+**Random Forest** es muy consistente, con buenas métricas generales, pero no lidera en ninguna categoría en esta comparación.
