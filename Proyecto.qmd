@@ -5,6 +5,8 @@ format: html
 editor: visual
 ---
 
+**Carnet:** 24002914
+
 ## Descripción del Dataset
 
 El dataset contiene variables relacionadas con las características morfológicas de células tumorales y su diagnóstico asociado. Las variables son utilizadas para diferenciar entre dos tipos de diagnósticos: **B** (Benigno) y **M** (Maligno). Aquí está la descripción de cada variable:
@@ -167,11 +169,23 @@ El objetivo del análisis exploratorio es obtener una visión general de los dat
 #| warning: false
 #| error: false
 
-# Cargar librerías necesarias
-library(tidyverse)
-library(summarytools)
-library(kableExtra) # Para tablas bonitas
-library(gt) # Otra alternativa para tablas
+# Librerías para análisis y visualización de datos
+library(tidyverse)      # Conjunto de paquetes para ciencia de datos: manipulación, gráficos, transformación.
+library(summarytools)   # Resúmenes descriptivos claros: tablas de frecuencias y estadísticas descriptivas.
+library(kableExtra)     # Para crear tablas atractivas y personalizadas a partir de 'knitr::kable'.
+library(gt)             # Alternativa para generar tablas bien diseñadas de forma sencilla.
+library(tidyr)          # Transformación y organización de datos (parte de tidyverse).
+library(ggplot2)        # Gráficos avanzados y personalizables basados en la gramática de gráficos.
+
+# Librerías para análisis de correlación
+library(corrplot)       # Visualización de matrices de correlación con gráficos claros.
+library(ggcorrplot)     # Alternativa moderna para gráficos de correlación, integrable con ggplot2.
+
+# Librerías para modelado y aprendizaje automático
+library(caret)          # Framework para aprendizaje automático: preprocesamiento, validación cruzada, tuning.
+library(e1071)          # Algoritmos como SVM, además de funciones estadísticas como curtosis y asimetría.
+library(randomForest)   # Implementación del algoritmo Random Forest para clasificación y regresión.
+library(class)          # Métodos básicos de aprendizaje automático como KNN (K-Nearest Neighbors).
 ```
 
 ### Primeras filas del Dataset
@@ -184,6 +198,11 @@ library(gt) # Otra alternativa para tablas
 
 #leer archivo de datos data.csv
 data <- read.csv("data.csv")
+
+sample_data <-  sample(data,15)
+
+write.csv(sample_data,"muestra.csv")
+  
 # Visualizar las primeras filas para referencia
 head(data) %>%
   kbl(caption = "Primeras filas del dataset") %>%
@@ -248,8 +267,6 @@ summary_table %>%
 #| fig.height: 25
 #| fig.align: center
 
-# Cargar librerías necesarias
-library(tidyverse)
 
 # Seleccionar variables numéricas
 numerical_vars <- data %>% select(where(is.numeric))
@@ -304,6 +321,37 @@ categorical_summary %>%
 
 ```
 
+### Relacion de variables contra `diagnosis`
+
+```{r relacion_diagnososis}
+#| echo: false
+#| message: false
+#| warning: false
+#| error: false
+#| fig.width: 10
+#| fig.height: 35
+#| fig.align: center
+# Identificar variables numéricas
+numeric_vars <- names(data)[sapply(data, is.numeric)]
+
+
+
+data_long <- pivot_longer(data, cols = all_of(numeric_vars), 
+                          names_to = "Variable", values_to = "Value")
+
+# Crear un boxplot con facet_wrap
+p <- ggplot(data_long, aes(x = diagnosis, y = Value)) +
+  geom_boxplot() +
+  facet_wrap(~ Variable, scales = "free_y", ncol = 3) + # Crear una cuadrícula con 3 columnas
+  labs(title = "Boxplots para Variables Numericas vs Diagnosis",
+       x = "Diagnosis", y = "Value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+# Mostrar el gráfico
+print(p)
+
+```
+
 ### Correlaciones
 
 ```{r correlaciones}
@@ -315,10 +363,6 @@ categorical_summary %>%
 #| fig.height: 15
 #| fig.align: center
 
-# Cargar librerías necesarias
-library(tidyverse)
-library(corrplot) # Para una matriz de correlación más clara
-library(ggcorrplot) # Alternativa para correlación
 
 
 # Convertir diagnosis a un formato numérico
@@ -461,10 +505,7 @@ En este análisis, se han seleccionado cuatro modelos representativos con difere
 #| error: false
 
 # Cargar librerías necesarias
-library(caret)
-library(e1071)
-library(randomForest)
-library(class)
+
 
 
 # Preparar los datos
@@ -488,38 +529,72 @@ scale_columns <- colnames(trainData)[colnames(trainData) != "diagnosis"]
 trainData[scale_columns] <- scale(trainData[scale_columns])
 testData[scale_columns] <- scale(testData[scale_columns])
 
-# Definir modelos
+# Definir modelos de aprendizaje automático
 models <- list(
+  # Modelo de Regresión Logística
   LogisticRegression = train(
-    diagnosis ~ ., data = trainData, method = "glm", family = "binomial", trControl = trainControl(method = "cv", number = 5)
+    diagnosis ~ .,                  # Fórmula: 'diagnosis' es la variable dependiente, las demás son predictores
+    data = trainData,               # Conjunto de datos para el entrenamiento
+    method = "glm",                 # Especifica el método: modelo lineal generalizado
+    family = "binomial",            # Familia binomial: clasificación binaria
+    trControl = trainControl(       # Control del entrenamiento
+      method = "cv",                # Usa validación cruzada
+      number = 5                    # Número de particiones (5-fold cross-validation)
+    )
   ),
+  
+  # Modelo de Máquina de Soporte Vectorial (SVM) con kernel lineal
   SVM = train(
-    diagnosis ~ ., data = trainData, method = "svmLinear", trControl = trainControl(method = "cv", number = 5)
+    diagnosis ~ .,                  # Fórmula: 'diagnosis' como variable objetivo
+    data = trainData,               # Datos de entrenamiento
+    method = "svmLinear",           # Método: SVM con kernel lineal
+    trControl = trainControl(       # Configuración de validación cruzada
+      method = "cv",                # Validación cruzada
+      number = 5                    # Número de particiones (5 folds)
+    )
   ),
+  
+  # Modelo de Bosques Aleatorios (Random Forest)
   RandomForest = train(
-    diagnosis ~ ., data = trainData, method = "rf", trControl = trainControl(method = "cv", number = 5)
+    diagnosis ~ .,                  # Fórmula: 'diagnosis' como variable dependiente
+    data = trainData,               # Datos de entrenamiento
+    method = "rf",                  # Método: Random Forest
+    trControl = trainControl(       # Configuración de validación cruzada
+      method = "cv",                # Validación cruzada
+      number = 5                    # Número de particiones (5 folds)
+    )
   ),
+  
+  # Modelo de K-Nearest Neighbors (KNN)
   KNN = train(
-    diagnosis ~ ., data = trainData, method = "knn", trControl = trainControl(method = "cv", number = 5),
-    tuneGrid = expand.grid(k = c(3, 5, 7)) # Buscar el mejor valor de k
+    diagnosis ~ .,                  # Fórmula: 'diagnosis' como variable dependiente
+    data = trainData,               # Datos de entrenamiento
+    method = "knn",                 # Método: KNN
+    trControl = trainControl(       # Configuración de validación cruzada
+      method = "cv",                # Validación cruzada
+      number = 5                    # Número de particiones (5 folds)
+    ),
+    tuneGrid = expand.grid(k = c(3, 5, 7)) # Grid de búsqueda para optimizar el valor de k (3, 5, 7)
   )
 )
 
-# Evaluar modelos en el conjunto de prueba
-results <- lapply(models, function(model) {
-  predictions <- predict(model, testData)
-  accuracy <- mean(predictions == testData$diagnosis)
+# Evaluar los modelos entrenados en el conjunto de prueba
+results <- lapply(models, function(model) {  # Iterar sobre cada modelo en la lista 'models'
+  predictions <- predict(model, testData)    # Generar predicciones usando el modelo entrenado
+  accuracy <- mean(predictions == testData$diagnosis) # Calcular la precisión (proporción de predicciones correctas)
+  
+  # Retornar una lista con las métricas del modelo
   list(
-    Accuracy = accuracy,
-    ConfusionMatrix = confusionMatrix(predictions, testData$diagnosis)
+    Accuracy = accuracy,                     # Guardar la precisión
+    ConfusionMatrix = confusionMatrix(       # Generar matriz de confusión
+      predictions,                           # Predicciones generadas por el modelo
+      testData$diagnosis                     # Valores reales del conjunto de prueba
+    )
   )
 })
 
-# Convertir resultados a un data frame para visualización
-results_df <- data.frame(
-  Model = names(results),
-  Accuracy = sapply(results, function(res) res$Accuracy)
-)
+# La variable 'results' contiene las métricas (precisión y matriz de confusión) para cada modelo.
+
 
 # Mostrar resultados
 #print(results_df)
@@ -531,8 +606,7 @@ results_df <- data.frame(
 #| warning: false
 #| error: false
 
-# Cargar librerías necesarias
-library(kableExtra)
+
 
 for (model_name in names(models)) {
   #cat("\n### Modelo:", model_name, "\n\n")
@@ -575,8 +649,7 @@ for (model_name in names(models)) {
 #| fig.height: 2.5
 #| fig.align: center
 
-library(caret)
-library(kableExtra)
+
 
 
 # Predecir en el conjunto de prueba para Logistic Regression
