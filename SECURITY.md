@@ -18,8 +18,9 @@ La seguridad es importante para nosotros. Si descubres una vulnerabilidad de seg
 Para reportar una vulnerabilidad de seguridad:
 
 1. **NO** abras un issue público
-2. Envía un correo electrónico al mantenedor del proyecto describiendo la vulnerabilidad
-3. Incluye la siguiente información:
+2. Usa la función de "Security Advisories" de GitHub en este repositorio, o
+3. Abre un issue privado contactando al mantenedor a través de GitHub
+4. Incluye la siguiente información:
    - Tipo de vulnerabilidad
    - Pasos para reproducir el problema
    - Versiones afectadas
