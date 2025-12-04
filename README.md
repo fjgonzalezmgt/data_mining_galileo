@@ -95,6 +95,24 @@ install.packages(c(
 ))
 ```
 
+### Obtención del Dataset
+
+⚠️ **Importante**: Este repositorio no incluye el archivo `data.csv` por razones de tamaño y derechos de distribución.
+
+Para ejecutar el proyecto, necesitas obtener el **Wisconsin Breast Cancer Dataset**:
+
+**Opción 1: Descarga Directa**
+- Visita [UCI Machine Learning Repository - Breast Cancer Wisconsin (Diagnostic)](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic))
+- Descarga el dataset `wdbc.data`
+- Renómbralo como `data.csv` y colócalo en el directorio raíz del proyecto
+
+**Opción 2: Usando R**
+```r
+# Descargar y preparar el dataset
+url <- "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/wdbc.data"
+download.file(url, "data.csv")
+```
+
 ### Ejecución del Proyecto
 
 1. Clonar el repositorio:
@@ -103,7 +121,7 @@ git clone https://github.com/fjgonzalezmgt/data_mining_galileo.git
 cd data_mining_galileo
 ```
 
-2. Asegurarse de que el archivo `data.csv` esté en el directorio raíz
+2. Obtener el archivo `data.csv` siguiendo las instrucciones anteriores
 
 3. Abrir el archivo `Proyecto.qmd` en RStudio
 
@@ -149,6 +167,15 @@ Este análisis tiene aplicaciones importantes en el diagnóstico clínico del c�
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia Creative Commons CC0 1.0 Universal. Ver el archivo [LICENSE.txt](LICENSE.txt) para más detalles.
+
+## 🤝 Contribuir
+
+¡Las contribuciones son bienvenidas! Por favor:
+
+1. Lee nuestras [Guías de Contribución](CONTRIBUTING.md)
+2. Revisa nuestro [Código de Conducta](CODE_OF_CONDUCT.md)
+3. Abre un issue para discutir cambios mayores
+4. Envía un Pull Request con tus mejoras
 
 ## 🎓 Universidad Galileo
 
